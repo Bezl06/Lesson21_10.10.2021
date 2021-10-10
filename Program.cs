@@ -7,12 +7,13 @@ namespace Lesson21
     public class Program
     {
         public static object locker = new object();
-        public readonly static int maxY = Console.BufferHeight;
+        public readonly static int maxY = Console.WindowHeight;
         public readonly static Random random = new Random();
         public static void Main(string[] args)
         {
+
             Console.Clear();
-            Chain[] colls = new Chain[Console.BufferWidth];
+            Chain[] colls = new Chain[Console.WindowWidth];
             for (int i = 0; i < colls.Length; i += 2)
             {
                 Thread.Sleep(random.Next(200));
