@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,20 +11,25 @@ namespace Lesson21
         public readonly static Random random = new Random();
         public static void Main(string[] args)
         {
-
+            Console.CursorVisible = false;
             Console.Clear();
             Chain[] colls = new Chain[Console.WindowWidth];
             for (int i = 0; i < colls.Length; i += 2)
             {
-                Thread.Sleep(random.Next(200));
+                Thread.Sleep(random.Next(100));
                 colls[i] = new Chain(i);
+            }
+            for (int i = 1; i < colls.Length; i += 2)
+            {
+                Thread.Sleep(random.Next(100));
+                colls[i] = new Chain(i-1);
             }
             Console.ReadLine();
         }
     }
     public class Chain
     {
-        private static string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        private static string chars = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%^&*!";
         private readonly int posX;
         private int posY = 0;
         private char[] chain;
@@ -33,7 +38,7 @@ namespace Lesson21
         {
             posX = x;
             chain = new char[Program.random.Next(3, 8)];
-            timer = new Timer(MoveNext, null, 0, Program.random.Next(50, 300));
+            timer = new Timer(MoveNext, null, 0, Program.random.Next(30, 240));
         }
         private void MoveNext(object _)
         {
@@ -60,7 +65,6 @@ namespace Lesson21
                     Console.SetCursorPosition(posX, posY - i);
                     Console.Write(chain[i]);
                 }
-                Console.ResetColor();
                 if (posY - chain.Length >= 0)
                 {
                     Console.SetCursorPosition(posX, posY - chain.Length);
@@ -70,7 +74,7 @@ namespace Lesson21
             if (++posY - chain.Length < Program.maxY) return;
             chain = new char[Program.random.Next(3, 8)];
             posY = 0;
-            timer.Change(50, Program.random.Next(50, 300));
+            timer.Change(50, Program.random.Next(30, 240));
         }
     }
 }
