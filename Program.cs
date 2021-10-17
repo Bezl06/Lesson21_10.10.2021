@@ -1,76 +1,90 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lesson21
+namespace MyApp
 {
     public class Program
     {
-        public static object locker = new object();
-        public readonly static int maxY = Console.WindowHeight;
-        public readonly static Random random = new Random();
         public static void Main(string[] args)
         {
-
+            Console.CursorVisible = false;
             Console.Clear();
-            Chain[] colls = new Chain[Console.WindowWidth];
-            for (int i = 0; i < colls.Length; i += 2)
+            Chain.frame = new char[Chain.maxX * Chain.maxY];
+            for (int i = 0; i < Chain.maxY; i++)
+                for (int j = 0; j < Chain.maxX; j++)
+                    Chain.frame[j + (i * Chain.maxX)] = ' ';
+            const int speed = 50;
+            Chain[] chains = new Chain[Chain.maxX * 2];
+            for (int i = 0; i < chains.Length; i++)
             {
-                Thread.Sleep(random.Next(200));
-                colls[i] = new Chain(i);
+                if (i % 2 == 0)
+                    chains[i] = new Chain(i / 2, Chain.random.Next(Chain.maxY * 2));
+                else
+                    chains[i] = new Chain(i / 2, Chain.random.Next(Chain.maxY * 2, Chain.maxY * 4));
             }
-            Console.ReadLine();
+            while (true)
+            {
+                Task task = Task.Delay(speed);
+                Console.SetCursorPosition(0, 0);
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.Write(Chain.frame);
+                Console.ForegroundColor = ConsoleColor.Green;
+                for (int i = 0; i < chains.Length; i++)
+                {
+                    if (chains[i].posY > 1 && chains[i].posY - 1 < Chain.maxY)
+                    {
+                        Console.SetCursorPosition(chains[i].posX, chains[i].posY - 1);
+                        Console.Write(Chain.chars[Chain.random.Next(Chain.chars.Length)]);
+                    }
+                }
+                Console.ForegroundColor = ConsoleColor.White;
+                for (int i = 0; i < chains.Length; i++)
+                {
+                    if (chains[i].posY > 0 && chains[i].posY < Chain.maxY)
+                    {
+                        Console.SetCursorPosition(chains[i].posX, chains[i].posY);
+                        Console.Write(Chain.chars[Chain.random.Next(Chain.chars.Length)]);
+                    }
+                }
+                for (int i = 0; i < chains.Length; i++)
+                    chains[i].MoveNext();
+                task.Wait();
+            }
         }
     }
     public class Chain
     {
-        private static string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        private readonly int posX;
-        private int posY = 0;
-        private char[] chain;
-        private Timer timer;
-        public Chain(int x)
+        public static string chars = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%^&*!";
+        public static int maxY = Console.WindowHeight - 1;
+        public static int maxX = Console.WindowWidth;
+        public static Random random = new Random();
+        public static char[] frame;
+        public readonly int posX;
+        public int posY = 0;
+        public int length;
+        public int tryies;
+        public int maxTryies;
+        public Chain(int x, int startSpeed)
         {
             posX = x;
-            chain = new char[Program.random.Next(3, 8)];
-            timer = new Timer(MoveNext, null, 0, Program.random.Next(50, 300));
+            tryies = startSpeed;
+            length = random.Next(10, 20);
+            maxTryies = random.Next(1, 3);
         }
-        private void MoveNext(object _)
+        public void MoveNext()
         {
-            for (int i = 0; i < chain.Length; i++)
-                chain[i] = chars[Program.random.Next(chars.Length)];
-            lock (Program.locker)
+            if (tryies-- > 1) return;
+            for (int i = 1; i < length && i <= posY; i++)
             {
-                if (posY < Program.maxY)
-                {
-                    Console.SetCursorPosition(posX, posY);
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write(chain[0]);
-                }
-                if (posY > 0 && posY - 1 < Program.maxY)
-                {
-                    Console.SetCursorPosition(posX, posY - 1);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write(chain[1]);
-                }
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                for (int i = 2; i < chain.Length && i <= posY; i++)
-                {
-                    if (posY - i >= Program.maxY) continue;
-                    Console.SetCursorPosition(posX, posY - i);
-                    Console.Write(chain[i]);
-                }
-                Console.ResetColor();
-                if (posY - chain.Length >= 0)
-                {
-                    Console.SetCursorPosition(posX, posY - chain.Length);
-                    Console.Write(' ');
-                }
+                if (posY - i >= maxY) continue;
+                frame[posX + ((posY - i) * maxX)] = chars[random.Next(chars.Length)];
             }
-            if (++posY - chain.Length < Program.maxY) return;
-            chain = new char[Program.random.Next(3, 8)];
+            if (posY - length >= 0) frame[posX + ((posY - length) * maxX)] = ' ';
+            tryies = maxTryies;
+            if (++posY - length < maxY) return;
             posY = 0;
-            timer.Change(50, Program.random.Next(50, 300));
+            tryies = random.Next(maxY * 2, maxY * 4);
+            maxTryies = random.Next(1, 3);
         }
     }
 }
